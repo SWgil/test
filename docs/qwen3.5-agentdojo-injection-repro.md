@@ -276,3 +276,4 @@ uv run ipi-signal-probe collect \
 - AgentDojo: https://github.com/ethz-spylab/agentdojo , https://agentdojo.spylab.ai/
 - Qwen3Guard: https://github.com/QwenLM/Qwen3Guard , https://qwenlm.github.io/blog/qwen3guard/
 - Qwen3Guard Technical Report: https://arxiv.org/pdf/2510.14276
+- 공격 방식 상세: [agentdojo-attacks.md](./agentdojo-attacks.md)
