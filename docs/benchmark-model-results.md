@@ -61,6 +61,35 @@
 | MSB | 10 도메인, 304 정상 + 405 공격 툴 | 65 | 6 목표 × 12 유형 | 2,000 | 태스크 × 목표 × 유형 | 공격 목표 달성 |
 | LivePI | 실 VM, 7 표면 | 케이스당 1 | 5 | 169 | 표면 × 기법 × 목표 (실행 가능한 것만) | 실제 부작용 + LLM 판정 |
 
+### 2.0.1 최신 공개 데이터 실측 (2026-09-18 기준)
+
+각 저장소·데이터셋을 직접 내려받아(shallow clone / HuggingFace API / PyPI 패키지) 파일 단위로 센 값이다. 논문 수치와 다른 곳은 마지막 열에 적었다. 커밋 해시는 조사 시점의 기본 브랜치 HEAD다.
+
+| 벤치마크 | 확인한 소스 | 실측 구성 | 논문 대비 차이 |
+|---|---|---|---|
+| **AgentDojo** | PyPI `agentdojo` 0.1.35, `get_suites("v1.2.2")` | 사용자 97 / 인젝션 **35** / 케이스 **949** (Workspace 40×14=560, Slack 21×5, Travel 20×7, Banking 16×9) | 논문 v1은 27 / 629. v1.2에서 Workspace `injection_task_6`~`13` 추가 |
+| **InjecAgent** | `uiuc-kang-lab/InjecAgent` f19c9f2 (2024-07-02) | `user_cases.jsonl` 17, `attacker_cases_dh` 30 + `_ds` 32 = 62, `test_cases_dh` 510 + `_ds` 544 = **1,054** (base/enhanced 각각 동일 수), `tools.json` 38 | 일치 |
+| **ASB** | `agiresearch/ASB` 1f561dc (2026-04-16) | 에이전트 10 (`agent_task.jsonl`), 사용자 태스크 **51** (academic_search만 6), 정상 툴 20, 공격 툴 **400** (에이전트당 40; Stealthy 200 / Disruptive 200; Aggressive 200 / Non 200) | 사용자 태스크 51 vs 논문 50 |
+| **WASP** | `facebookresearch/wasp` ffee6f4 (2025-05-14) | 공격 목표 21 (`attacks_in_webarena_format.jsonl`: GitLab 12, Reddit 9, 그중 유출형 5), 사용자 목표 환경당 2 (`GitlabUserGoals`/`RedditUserGoals`), 인젝션 형식 2 (`run.py` 기본 루프: goal-hijacking plain / URL), 유틸리티 37 → 21×2×2 = **84** | 일치. `constants.py`에 generic 형식 2종이 더 정의돼 있으나 기본 루프에서 미사용 |
+| **DoomArena** | `ServiceNow/DoomArena` b80902f (2025-09-10) | 패키지: `browsergym`, `taubench`, `osworld`, `core` + 논문 이후 추가된 `mailinject`, `mcp`, `promptceptor`. 공격 모듈: banner, popup, div_injection, fixed_injection(_sequence), adversarial_user_agent, user_generated_content. 성공 필터: retail_refund, retail_secrets, airline_info_leak, popup_click, send_certificate, llm_judge | 고정 데이터셋 없음. 논문 이후 MCP·메일 환경 게이트웨이 추가 |
+| **RTC-Bench** | `OSU-NLP-Group/RedTeamCUA` a05b8bd (2026-02-09) | `evaluation_examples/examples/` **864** = owncloud 288 + reddit 288 + rocketchat 288. 파일명 기준 loose 432 / specific 432, code 432 / language 432. `goals/benign` 9, `goals/adv` 파일 9개 × 24 | 일치. end2end·pointer·defense용 설정 생성 스크립트 별도 제공 |
+| **VPI-Bench** | `cua-framework/agents` 801aa47 (2026-01-30) | `main_benchmark.parquet` **306** 행: amazon 79, bbc 79, booking 79, email 46, messenger 23. `_agent_type`: computer_use 219 / browser_use 87 | 일치 |
+| **OS-Harm** | `tml-epfl/OS-Harm` c0fa95e (2025-09-18) | `test_misuse` 50, `test_misbehavior` 50, `test_injection` 기본 태스크 10 → 인젝션 벡터 인스턴스 14 (website 2, desktop_notification 4, libreoffice_writer 2, vs_code 4, thunderbird draft 1, received 1) × 목표 = **51** 조합, 사용 목표 12종 (`run.py`에는 19종 정의) | 논문 "인젝션 50" vs 실측 51 조합 |
+| **LLMail-Inject** | HF `microsoft/llmail-inject-challenge` (2025-05-16) | raw 제출 Phase 1 **370,724** / Phase 2 **90,916** 행, 시나리오 4 (`scenarios.json`), `labelled_unique_submissions_phase1/2.json`, `system_prompt.json` | 일치 |
+| **b3** | HF `Lakera/b3-agent-security-benchmark-weak` (2025-11-05) | **630** 행 = 210 공격 × 3 방어 레벨, 위협 스냅샷 10개 × 2 파일. README: 이 공개본은 *low-quality* 버전이며 논문 평가에 쓴 고품질 210개는 미공개, 실행 코드는 inspect_evals | 공개본은 논문 평가본과 다름 |
+| **AgentDyn** | `leolee99/AgentDyn` 5353cf7 (2026-05-19) | `default_suites/v1/{shopping,github,dailylife}`: 사용자 20/20/20, 인젝션 9/9/10 → **560**. `task_suite.py` 등록 툴 39 / **32** / 27. AgentDojo 4 스위트도 포함. `defenses/`에 progent, drift 포크 동봉 | GitHub 툴 32 vs 논문 34 |
+| **MCPTox** | `zhiqiangwang4/MCPTox-Benchmark` f85189f (2025-12-03) | `pure_tool.json` 서버 **45** / 툴 **485**, `def_tool/` 485 파일, `response_all.json` `data_length` **1,348**, 위험 범주 11 (Credential Leakage, Privacy Leakage, Message Hijacking, Code Injection, Data Tampering, Instruction Tampering, Information Manipulation, Financial Loss, Service Disruption, Infrastructure Damage, Other), 라벨 5, 템플릿 3 + Other | 논문 353 툴 / 1,312 케이스 vs 저장소 485 / 1,348 |
+| **MSB** | `dongsenzhang/MSB` c1d6a70 (2026-03-24) | `attack_type.jsonl` **12** (prompt_injection, false_error, name_overlap, preference_manipulation, simulated_user, out_of_scope_parameter, search_term_deception, tool_transfer + 혼합 4), `attack_task.jsonl` **5**, `agent_task.jsonl` 도메인 10, 정상 툴 서버 설정 25, 공격 툴 구현 `.py` 55 (6 도메인) | 논문 "6 목표 / 65 태스크 / 405 툴"은 저장소 파일로 직접 확인 불가. 인스턴스는 실행 시 생성 |
+| **LivePI** | `leizhao7/livepi` d48d3fa (2026-06-09) | `all_tasks.jsonl` 템플릿 34 (7 표면 × 5 목표 − 1), `benchmark_case_matrix.json` `total_case_count` **169** (WhatsApp/Telegram/Slack 각 5, Email 50, Local Docs 50, Gist 50, Repo Links 4), 프롬프트 수준 기법 10 (checklist_handoff, email_chain_spoofing, trusted_integration_spoofing, compositional_instruction, skill_rule_injection, post_compaction_file_read_lure, approval_chain_spoofing, covert_tool_binding, shadow_policy_update, state_desynchronization_override) | 일치. 하니스: OpenClaw, Hermes, Codex CLI, Claude Code |
+
+실측에서 드러난 유의점:
+
+- **AgentDojo**만 벤치마크 버전에 따라 케이스 수가 달라진다(629 vs 949). 나머지는 논문 발표 후 데이터 규모 변경이 없거나 소폭이다.
+- **MCPTox**는 저장소 데이터가 논문보다 크다(툴 485, 케이스 1,348). AAAI 판과 arXiv 판 사이에 확장된 것으로 보이며, 어느 수치로 실험했는지는 논문 버전을 명시해야 한다.
+- **b3**는 공개본이 논문 평가본이 아니다. 공개 630행으로 돌린 점수는 논문 순위와 직접 비교하면 안 된다.
+- **MSB**와 **DoomArena**는 케이스가 파일로 고정돼 있지 않고 실행 시 조합·생성되므로, 재현 시 생성 스크립트의 시드·설정을 기록해야 한다.
+- **ASB**, **OS-Harm**, **AgentDyn**은 논문 표와 1~2 차이가 나는 항목이 있다. 실험 보고 시 저장소 커밋을 함께 적는 것이 안전하다.
+
 ### 2.1 AgentDojo — [arXiv:2406.13352](https://arxiv.org/abs/2406.13352)
 
 | 환경 | 툴 | 사용자 태스크 | 인젝션 태스크 | 보안 케이스 |
