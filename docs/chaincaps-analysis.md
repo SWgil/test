@@ -325,7 +325,9 @@ FIDES는 메일마다 독자 라벨이 붙고(수신자 목록에 파트너가 �
 
 ### 7.7 배치 구조
 
-★는 새로 만들거나 고쳐야 하는 것, 나머지는 그대로 두는 것이다.
+![배치 구조 비교: FIDES는 에이전트 루프와 모든 툴을 고쳐야 하고, ChainCaps는 프록시 하나와 매니페스트만 추가한다](deployment-structure.png)
+
+(원본 SVG: [`docs/deployment-structure.svg`](deployment-structure.svg)) ★는 새로 만들거나 고쳐야 하는 것, 나머지는 그대로 두는 것이다.
 
 **FIDES: 에이전트 루프 안에 들어간다**
 

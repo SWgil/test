@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 640" width="1240" height="640" role="img" aria-label="FIDES는 에이전트 루프와 모든 툴을 고쳐야 하고, ChainCaps는 프록시 하나와 매니페스트만 추가한다" font-family="'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#374151"/>
+    </marker>
+    <marker id="arrow-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1240" height="640" fill="#ffffff"/>
+
+  <!-- ===== 제목 ===== -->
+  <text x="620" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">배치 구조 비교: 무엇을 고쳐야 하는가</text>
+
+  <!-- ===== 범례 ===== -->
+  <rect x="440" y="44" width="22" height="14" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/>
+  <text x="468" y="56" fill="#374151">새로 만들거나 고쳐야 하는 것</text>
+  <rect x="660" y="44" width="22" height="14" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="688" y="56" fill="#374151">그대로 두는 것</text>
+
+  <!-- ===== 왼쪽: FIDES ===== -->
+  <text x="300" y="92" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">FIDES: 에이전트 루프 안에 들어간다</text>
+
+  <!-- 사용자 프롬프트 -->
+  <rect x="220" y="108" width="160" height="34" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="300" y="130" text-anchor="middle" fill="#111827">사용자 프롬프트</text>
+  <line x1="300" y1="142" x2="300" y2="170" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="308" y="160" fill="#374151" font-size="11">라벨 Trusted</text>
+
+  <!-- 플래닝 루프 (수정) -->
+  <rect x="40" y="172" width="520" height="292" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="56" y="196" font-weight="700" fill="#c2410c">★ Fides 플래닝 루프</text>
+  <text x="230" y="196" fill="#7c2d12" font-size="11">기존 에이전트 루프를 이것으로 교체</text>
+
+  <!-- 루프 내부 상태 -->
+  <rect x="56" y="212" width="230" height="30" rx="3" fill="#ffffff" stroke="#c2410c" stroke-width="1.2"/>
+  <text x="171" y="231" text-anchor="middle" fill="#111827" font-size="12">대화 상태 + 컨텍스트 라벨 (join)</text>
+  <rect x="56" y="250" width="230" height="30" rx="3" fill="#ffffff" stroke="#c2410c" stroke-width="1.2"/>
+  <text x="171" y="269" text-anchor="middle" fill="#111827" font-size="12">변수 저장소 (숨긴 툴 결과)</text>
+  <rect x="56" y="288" width="230" height="30" rx="3" fill="#ffffff" stroke="#c2410c" stroke-width="1.8"/>
+  <text x="171" y="307" text-anchor="middle" fill="#c2410c" font-size="12" font-weight="700">★ policy(trace) — 호출 직전 검사</text>
+
+  <!-- LLM (무수정) -->
+  <rect x="380" y="212" width="160" height="34" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="460" y="234" text-anchor="middle" fill="#111827">LLM (무수정)</text>
+  <line x1="286" y1="227" x2="378" y2="227" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="332" y="222" text-anchor="middle" fill="#374151" font-size="11">Query</text>
+
+  <!-- 격리 LLM (추가) -->
+  <rect x="380" y="256" width="160" height="34" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/>
+  <text x="460" y="278" text-anchor="middle" fill="#c2410c" font-weight="700">★ 격리 LLM (추가)</text>
+  <line x1="286" y1="271" x2="378" y2="271" stroke="#c2410c" stroke-width="1.5" marker-end="url(#arrow-acc)"/>
+  <text x="332" y="266" text-anchor="middle" fill="#c2410c" font-size="11">query_llm</text>
+
+  <!-- 툴 래퍼 (수정) → 원본 툴 (무수정) -->
+  <rect x="56" y="350" width="230" height="52" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/>
+  <text x="171" y="371" text-anchor="middle" fill="#c2410c" font-weight="700">★ 라벨링 툴 래퍼 (툴마다)</text>
+  <text x="171" y="390" text-anchor="middle" fill="#7c2d12" font-size="11">결과 항목마다 MetaValue 라벨 계산</text>
+  <line x1="171" y1="318" x2="171" y2="348" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="179" y="338" fill="#374151" font-size="11">ToolCall</text>
+
+  <rect x="380" y="350" width="160" height="52" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="460" y="371" text-anchor="middle" fill="#111827">원본 툴 / 서비스</text>
+  <text x="460" y="390" text-anchor="middle" fill="#374151" font-size="11">(무수정)</text>
+  <line x1="286" y1="368" x2="378" y2="368" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="332" y="363" text-anchor="middle" fill="#374151" font-size="11">호출</text>
+  <line x1="378" y1="388" x2="286" y2="388" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="332" y="401" text-anchor="middle" fill="#374151" font-size="11">결과</text>
+
+  <!-- 툴 스키마 변경 주석 -->
+  <text x="56" y="428" fill="#7c2d12" font-size="11">★ 툴 스키마도 변경: MetaValue 필드, 변수/리터럴 kind 태그</text>
+  <text x="56" y="448" fill="#7c2d12" font-size="11">★ 정책은 파이썬 술어로 직접 작성</text>
+
+  <!-- FIDES 대가 -->
+  <text x="40" y="490" fill="#374151" font-size="12">루프 안에 있으므로 모델이 무엇을 봤는지 안다 → 변수 전달·숨김·항목별 라벨 가능</text>
+  <text x="40" y="510" fill="#374151" font-size="12">대가: 플래너 교체 + 모든 툴 래핑. 기존 프레임워크에 끼워 넣을 수 없음</text>
+
+  <!-- ===== 구분선 ===== -->
+  <line x1="620" y1="80" x2="620" y2="520" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- ===== 오른쪽: ChainCaps ===== -->
+  <text x="930" y="92" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">ChainCaps: 에이전트와 툴 사이에 선다</text>
+
+  <!-- 사용자 프롬프트 -->
+  <rect x="640" y="108" width="160" height="34" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="720" y="130" text-anchor="middle" fill="#111827">사용자 프롬프트</text>
+  <line x1="720" y1="142" x2="720" y2="196" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="728" y="172" fill="#374151" font-size="11">프록시에는 보이지 않음</text>
+
+  <!-- 기존 에이전트 (무수정) -->
+  <rect x="634" y="198" width="172" height="120" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="720" y="222" text-anchor="middle" fill="#111827" font-weight="700">기존 에이전트 + LLM</text>
+  <text x="720" y="242" text-anchor="middle" fill="#374151" font-size="11">Cline, OpenHands, LangChain…</text>
+  <text x="720" y="262" text-anchor="middle" fill="#374151" font-size="11">(무수정)</text>
+  <rect x="644" y="278" width="152" height="28" rx="3" fill="#fff7ed" stroke="#c2410c" stroke-width="1.8"/>
+  <text x="720" y="297" text-anchor="middle" fill="#c2410c" font-size="11" font-weight="700">★ MCP 서버 주소만 프록시로</text>
+
+  <!-- 프록시 (추가) -->
+  <rect x="866" y="176" width="200" height="164" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="966" y="200" text-anchor="middle" fill="#c2410c" font-weight="700">★ ChainCaps 프록시 (추가)</text>
+  <rect x="880" y="214" width="172" height="28" rx="3" fill="#ffffff" stroke="#c2410c" stroke-width="1.2"/>
+  <text x="966" y="232" text-anchor="middle" fill="#111827" font-size="12">DAG + B_ctx</text>
+  <rect x="880" y="250" width="172" height="28" rx="3" fill="#ffffff" stroke="#c2410c" stroke-width="1.2"/>
+  <text x="966" y="268" text-anchor="middle" fill="#111827" font-size="12">싱크 규칙: Req ∈ ⋂B ∩ B_ctx</text>
+  <rect x="880" y="286" width="172" height="40" rx="3" fill="#ffffff" stroke="#c2410c" stroke-width="1.8"/>
+  <text x="966" y="303" text-anchor="middle" fill="#c2410c" font-size="12" font-weight="700">★ 매니페스트 표</text>
+  <text x="966" y="318" text-anchor="middle" fill="#7c2d12" font-size="11">Init(o) / Exec(t) / Pass(t)</text>
+
+  <!-- MCP 서버 (무수정) -->
+  <rect x="1106" y="198" width="114" height="120" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="1163" y="226" text-anchor="middle" fill="#111827" font-weight="700">기존 MCP 서버</text>
+  <text x="1163" y="248" text-anchor="middle" fill="#374151" font-size="11">filesystem, fetch,</text>
+  <text x="1163" y="264" text-anchor="middle" fill="#374151" font-size="11">slack, github…</text>
+  <text x="1163" y="290" text-anchor="middle" fill="#374151" font-size="11">(무수정)</text>
+
+  <!-- 화살표: 에이전트 → 프록시 → 서버 -->
+  <line x1="806" y1="236" x2="864" y2="236" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="835" y="229" text-anchor="middle" fill="#374151" font-size="11">tools/call</text>
+  <line x1="1066" y1="236" x2="1104" y2="236" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="1085" y="228" text-anchor="middle" fill="#374151" font-size="10">허용 시</text>
+  <line x1="1104" y1="280" x2="1066" y2="280" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="1085" y="295" text-anchor="middle" fill="#374151" font-size="10">결과</text>
+  <line x1="864" y1="280" x2="806" y2="280" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="835" y="273" text-anchor="middle" fill="#374151" font-size="10">결과 /</text>
+  <text x="835" y="295" text-anchor="middle" fill="#c2410c" font-size="10">isError(차단)</text>
+
+  <!-- 프록시 시야 밖 -->
+  <rect x="650" y="350" width="570" height="92" rx="4" fill="#ffffff" stroke="#9ca3af" stroke-width="1" stroke-dasharray="5 4"/>
+  <text x="664" y="372" fill="#374151" font-size="12" font-weight="700">프록시가 보지 못하는 것 (보호 밖)</text>
+  <text x="664" y="394" fill="#374151" font-size="11">· 사용자 프롬프트, 모델이 컨텍스트에서 실제로 쓴 값 → B_ctx로 "돌아간 것 전부"를 가정</text>
+  <text x="664" y="412" fill="#374151" font-size="11">· 프록시를 거치지 않는 호출: 셸 내부의 파일 읽기, 직접 API 호출, display 이후의 렌더링</text>
+  <text x="664" y="430" fill="#374151" font-size="11">· 태스크 경계 → display 호출을 경계로 추정 (세션 격리)</text>
+
+  <!-- ChainCaps 대가 -->
+  <text x="650" y="490" fill="#374151" font-size="12">밖에 있으므로 툴·에이전트·LLM을 손대지 않는다 → 어떤 MCP 에이전트에도, 어떤 모델에도 배치</text>
+  <text x="650" y="510" fill="#374151" font-size="12">대가: tools/call만 보이므로 컨텍스트 전체를 보수적으로 오염 취급 (오탐)</text>
+
+  <!-- ===== 하단 요약 ===== -->
+  <line x1="40" y1="540" x2="1200" y2="540" stroke="#d1d5db" stroke-width="1"/>
+  <text x="620" y="568" text-anchor="middle" fill="#111827" font-size="13" font-weight="700">고쳐야 하는 것의 수: FIDES = 루프 1 + 툴 N개 래퍼 + 스키마 + 정책 + 격리 LLM / ChainCaps = 프록시 1 + 매니페스트 표 + 설정 1줄</text>
+  <text x="620" y="594" text-anchor="middle" fill="#374151" font-size="12">FIDES는 라벨을 데이터 안에 넣고 컨텍스트를 지키고, ChainCaps는 라벨을 프록시에 두고 배치를 지킨다</text>
+  <text x="620" y="618" text-anchor="middle" fill="#6b7280" font-size="11">출처: microsoft/fides Tutorial.ipynb (CELL 23·26·29), Jxcup/chaincaps-code experiments/proxy/chaincaps_mcp_proxy.py</text>
+</svg>
