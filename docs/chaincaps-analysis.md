@@ -3,7 +3,7 @@
 > 논문: *ChainCaps: Composition-Safe Tool-Using Agents via Monotonic Capability Attenuation* — [arXiv:2605.26542v4](https://arxiv.org/abs/2605.26542) (Jiang, Yang, Li, Liu, Yu, Liu; AIWILD 2026 워크숍 / RAID 2026 아티팩트)
 > 코드: [Jxcup/chaincaps-code](https://github.com/Jxcup/chaincaps-code) (commit `dc26800`, 2026-06-27, MIT)
 > 비교 대상: *Securing AI Agents with Information-Flow Control* (FIDES) — [arXiv:2505.23643](https://arxiv.org/abs/2505.23643), 코드 [microsoft/fides](https://github.com/microsoft/fides) (튜토리얼 노트북)
-> 검증 스크립트: [`docs/chaincaps-verification.py`](chaincaps-verification.py) (V1~V13, ChainCaps 엔진), [`docs/fides-chaincaps-isomorphism.py`](fides-chaincaps-isomorphism.py) (FIDES 독자 격자와의 동형성) — 본문의 V# 항목은 이 스크립트들을 실제 코드에 돌린 결과다.
+> 검증 스크립트: [`docs/chaincaps-verification.py`](chaincaps-verification.py) (V1~V14, ChainCaps 엔진), [`docs/fides-chaincaps-isomorphism.py`](fides-chaincaps-isomorphism.py) (FIDES 독자 격자와의 동형성) — 본문의 V# 항목은 이 스크립트들을 실제 코드에 돌린 결과다.
 
 ---
 
@@ -254,7 +254,7 @@ ChainCaps의 예산은 FIDES 멱집합 격자의 **역(inverse) 격자**이고, 
 | 컨텍스트 오염 회피 | **FIDES** | FIDES는 툴 결과를 변수에 두고 플래너는 이름만 보며(변수 전달), 컨텍스트보다 제한적인 노드만 숨기고(선택적 숨김), 컨텍스트 라벨은 **실제로 본 것**의 join이다. ChainCaps는 모든 결과가 모델로 돌아가고 `B_ctx`는 **돌아간 모든 것**의 meet이며(`dag.py:100,148`), 명시 lineage가 있어도 항상 `B_ctx`와 교집합한다(`dag.py:182`). V3: `.env`를 한 번 읽으면 공개 데이터만 의존하는 전송도 차단. V13(b): 메일을 따로 읽어 노드를 나누고 deps를 4통으로 한정해도 `B_ctx`가 5번의 예산으로 줄어 차단. 되돌리는 수단은 세션 격리뿐이고 이는 건전성을 깬다(§6.2) |
 | 정량 비밀해제 | **FIDES** | FIDES는 `query_llm`이 격리 LLM으로 숨긴 변수에서 타입 한정 값(bool/enum)만 뽑고, 타입 격자(bool ⊑ enum ⊑ string)로 정책이 "H에서 나온 bool 하나는 흘려도 된다"를 표현한다. ChainCaps의 예산은 값 전체에 대한 전부/전무이고, 예외는 사람이 발급하는 HMAC 원샷 토큰뿐이며(`dag.py:222-294`), 공개 프록시에는 토큰을 엔진에 넘기는 코드가 없다(`chaincaps_mcp_proxy.py:269`는 토큰 없이 호출). "기밀 보고서에 X가 언급되면 파트너에게 '진행'이라고 보내"는 FIDES에서 1비트로 가능하고 ChainCaps에서는 차단된다 |
 | 라벨 출처 | 데이터에 접근 메타데이터가 있으면 **FIDES**, 없으면 동등 | FIDES는 툴 래퍼가 항목의 자기 메타데이터(메일 수신자·발신자, 문서 ACL)에서 라벨을 계산해 항목마다 다른 민감도가 그대로 실린다(CELL 25). ChainCaps는 프록시가 리소스 이름 부분 문자열로 `Init`을 정한다(`resolve_source_budget`: `.env`, `salary`, `internal`, …). 이름이 바뀌면 정책이 바뀌고 한 결과 안의 행별 차이는 표현할 수 없다. 반면 메타데이터가 없는 데이터(로컬 텍스트 파일)에서는 FIDES도 래퍼 안에 규칙을 직접 써야 하므로 동등하다 |
-| 연산·스코프 계층 | **ChainCaps** | ChainCaps의 특권은 `(op, scope)`이고 `subsumes`가 `/tmp/*` ⪰ `/tmp/x`, `@corp.com` ⪰ `bob@corp.com`, `host/*` ⪰ `host/path`의 계층을 내장한다(`budget.py:57-90`). `write_file`, `execute`, `db_write`, `memory_write`처럼 사람이 관찰자가 아닌 효과도 싱크 축에 있다. FIDES 독자 격자의 원소는 사람이고 멱집합은 평면이라, `internal.corp.com/*`나 `/workspace/*`를 표현하려면 그 채널을 읽는 주체를 격자 원소로 새로 정의하고 툴별 정책 술어에서 URL·경로 인자를 그 주체로 해석하는 코드를 써야 한다. "내부 배포 문서를 읽어 `internal.corp.com/deploy`에 POST하고 `/workspace/backup/`에 백업"은 ChainCaps에서 예산 한 줄, FIDES에서는 격자 확장 + 술어 두 개다 |
+| 연산·스코프 계층 | **ChainCaps** | ChainCaps의 특권은 `(연산, 범위)` 두 축이다. 연산 축 덕에 `write_file`, `execute`, `db_write`처럼 사람이 관찰자가 아닌 효과도 싱크가 되고, 범위 축의 포섭 규칙(`*`, `prefix*`, `@domain`, `budget.py:57-90`)이 예산 한 줄로 무한히 많은 구체 호출을 판정한다. FIDES 독자 격자는 원소가 사람이고 평면이라, 같은 정책을 쓰려면 채널 주체를 격자에 추가하고 툴별 술어에서 접두사 검사를 직접 구현해야 한다. 자세한 예시는 §7.3.2a, 엔진 확인은 V14 |
 | 배치 | **ChainCaps** | ChainCaps는 MCP 프록시 프로세스 하나와 매니페스트 표를 추가하고 에이전트의 MCP 서버 주소만 프록시로 바꾼다. 에이전트·LLM·툴 서버는 무수정이다. FIDES는 플래너 루프를 교체하고(`LabeledPlanningLoop`), **모든** 툴에 라벨 계산 래퍼를 쓰고, 툴 스키마를 바꾸고(`MetaValue`, 변수/리터럴 `kind` 태그, CELL 23/26), 정책 술어와 격리 LLM 엔드포인트를 추가해야 한다. 기존 프레임워크에 끼워 넣을 수 없다. 대가: 프록시는 `tools/call`만 보므로 사용자 프롬프트도 모델이 실제로 본 것도 모르며(그래서 `B_ctx`가 보수적), 프록시를 거치지 않는 호출(셸 내부, 직접 API)은 보호 밖이다 (§7.7 도식) |
 | 모델 의존 | **ChainCaps** | FIDES의 유틸리티는 모델이 변수 전달과 `query_llm`을 잘 쓰느냐에 달린다. 논문에서 비추론 모델(gpt-4o)은 Basic 플래너보다 크게 낮았고(약 7% 대 24%), 추론 모델(o1/o3)에서만 우위였다. ChainCaps는 모델에게 아무것도 요구하지 않는다. 정책 오류 응답을 받고 재계획하면 되므로 5개 모델에서 양성 완료 96~100%였다 |
 | 비용 | **ChainCaps** | `query_llm`은 호출마다 LLM을 한 번 더 부른다. ChainCaps는 집합 연산뿐이라 호출당 0.13ms(P95 0.34ms)다 |
@@ -262,6 +262,69 @@ ChainCaps의 예산은 FIDES 멱집합 격자의 **역(inverse) 격자**이고, 
 | 감사·검증 | **ChainCaps** | 모든 싱크 결정이 요청 특권·전파 예산·차단 사유와 함께 `SinkEvent`로 남고, 정리 3.1을 `verify_budget_preservation`으로 런타임에 확인할 수 있다. FIDES의 정책은 파이썬 술어라 결정 근거가 코드에 흩어진다 |
 
 정리하면 같은 범위에서 ChainCaps가 이기는 것은 **표현력에서는 연산·스코프 계층 하나**, 나머지는 **운영**(배치, 모델 무관, 비용, 미지 툴, 감사)이다. FIDES가 이기는 것은 전부 **표현력·유틸리티**(입도, 컨텍스트 위생, 정량 비밀해제, 데이터 기반 라벨)다. 이 대비는 우연이 아니다. FIDES는 루프 안에 있어서 모델이 무엇을 봤는지 알고, ChainCaps는 밖에 있어서 `tools/call`만 본다.
+
+#### 7.3.2a 보충: "연산·스코프 계층"이 무엇이고 왜 ChainCaps 쪽이 유리한가
+
+**싱크 특권은 두 축으로 되어 있다.** ChainCaps의 특권 하나는 `(연산, 범위)` 쌍이다(`budget.py:31`).
+
+```
+send_http(internal.corp.com/*)     연산 = HTTP 전송,   범위 = 이 호스트의 모든 경로
+write_file(/workspace/*)           연산 = 파일 쓰기,   범위 = 이 디렉터리 아래 전부
+send_email(@corp.com)              연산 = 메일 전송,   범위 = 이 도메인의 모든 주소
+execute(*)                         연산 = 셸 실행,     범위 = 모든 명령
+display(*)                         연산 = 사용자 표시, 범위 = 제한 없음
+```
+
+FIDES의 독자 라벨은 축이 하나뿐이다. 원소가 **사람**(메일 주소)이고, "이 데이터를 볼 수 있는 사람의 집합"만 말한다. 두 축이 각각 어떤 차이를 만드는지 나눠 본다.
+
+**축 1: 연산 — 사람이 아닌 목적지를 싱크로 다룰 수 있다**
+
+에이전트의 위험한 행동 중 상당수는 "누군가에게 보내는 것"이 아니다. 파일을 쓰고, 명령을 실행하고, DB에 넣고, 메모리 툴에 저장하는 것이다. 이런 행동에는 자연스러운 "독자"가 없다.
+
+| 행동 | ChainCaps 싱크 | FIDES 독자 격자에서는 |
+|---|---|---|
+| `/workspace/backup/`에 백업 쓰기 | `write_file(/workspace/*)` | 원소가 사람이라 표현할 자리가 없음. "`/workspace`를 읽을 수 있는 주체"라는 가상의 사람을 격자에 추가해야 함 |
+| `internal.corp.com/deploy`에 POST | `send_http(internal.corp.com/*)` | "`internal.corp.com` 서버"라는 주체를 추가하고, `send_http` 툴의 정책 술어에서 URL 인자를 그 주체로 해석하는 코드를 써야 함 |
+| 셸 명령 실행 | `execute(*)` | 실행 결과를 누가 보는지 정의 불가. 별도 무결성 정책(P-T)으로 다룰 문제 |
+
+FIDES가 못 하는 것은 아니다. 격자는 개발자가 정의하므로 "채널 주체"를 원소로 넣을 수 있다. 다만 노트북의 정책 술어(CELL 33)를 보면 그 방식이 어떤 모습인지 알 수 있다. 정책 함수가 `json.loads(args)["channel"]`로 인자를 직접 파싱하고 라벨과 비교한다. 툴마다, 인자마다 이런 코드를 손으로 써야 한다. ChainCaps는 `_infer_sink_privilege`가 `url`/`to`/`path`/`command` 인자에서 요청 특권을 자동으로 뽑는다(`engine.py:288-313`).
+
+**축 2: 범위 계층 — 예산 한 줄이 구체 호출 무한히 많은 것을 판정한다**
+
+런타임에 실제로 검사되는 요청 `Req(t,a)`는 항상 **구체적**이다. `send_http(https://internal.corp.com/deploy/v2)`, `write_file(/workspace/backup/cfg.yaml)`처럼 호출 인자 그대로다. 정책은 이런 구체 값을 하나하나 나열할 수 없다. 경로와 URL은 무한히 많다. 그래서 예산 쪽 범위는 **포섭 관계**로 일반화되어야 한다. `subsumes`(`budget.py:57-90`)가 세 가지 규칙으로 이것을 한다.
+
+| 규칙 | 예산의 범위 | 포섭하는 요청 | 포섭하지 않는 요청 |
+|---|---|---|---|
+| `*` | `execute(*)` | 모든 명령 | — |
+| 접두사 글롭 `prefix*` | `write_file(/workspace/*)` | `/workspace/backup/cfg.yaml` | `/etc/cron.d/x`, `/workspace/../etc/passwd` (정규화 후 `/etc/passwd`) |
+| 접두사 글롭 (URL) | `send_http(internal.corp.com/*)` | `https://internal.corp.com/deploy/v2`, `http://internal.corp.com/status?ok=1` | `internal.corp.com.evil.io/deploy` (`/`까지 접두사라 안 맞음), `attacker.com` |
+| 도메인 접미사 `@domain` | `send_email(@corp.com)` | `bob@corp.com`, `ops@corp.com` | `bob@corp.com.evil.io`, `eve@ext.com` |
+
+V14가 이것을 엔진에서 확인한 결과다. 사내 배포 문서에 예산 **세 줄** `{display, write_file(/workspace/*), send_http(internal.corp.com/*)}`를 주고 아홉 가지 호출을 넣었다.
+
+```
+write_file    /workspace/backup/cfg.yaml                 허용
+write_file    /workspace/../etc/cron.d/x                 차단  (경로 순회 정규화)
+write_file    /etc/cron.d/x                              차단
+send_http     https://internal.corp.com/deploy/v2        허용
+send_http     http://internal.corp.com/status?ok=1       허용  (스킴 무관)
+send_http     https://internal.corp.com.evil.io/deploy   차단  (호스트 위장)
+send_http     https://attacker.com/collect               차단
+send_email    ops@corp.com                               차단  (연산 자체가 예산에 없음)
+execute_shell cat /workspace/doc.md                      차단  (연산 자체가 예산에 없음)
+```
+
+FIDES의 멱집합 격자는 **평면**이다. 원소 사이에 포함 관계가 없다. `@corp.com`은 `bob@corp.com`을 포함하는 원소가 아니라 그냥 다른 문자열이다(`docs/fides-chaincaps-isomorphism.py` 마지막 줄). "회사 주소 전부"를 말하려면 (a) 우주 집합에 모든 주소를 열거해 두거나, (b) 접두사 포섭을 구현한 커스텀 격자 클래스를 새로 짜야 한다. 경로와 URL처럼 열거가 불가능한 범위에서는 (b)뿐이고, 그것은 ChainCaps의 `subsumes`를 FIDES 안에 다시 만드는 일이다.
+
+**두 축이 합쳐지면 정책이 운영자의 말과 같아진다**
+
+"이 문서는 화면에 보여 줘도 되고, 워크스페이스 아래에는 써도 되고, 사내 API에는 보내도 되지만, 그 밖으로는 안 된다"가 예산 세 줄이다. FIDES에서 같은 정책은 (1) 격자에 "워크스페이스 독자"와 "사내 API 독자" 원소 추가, (2) 문서 라벨에 그 원소 부여, (3) `write_file` 술어에서 경로를 "워크스페이스 독자"로 매핑하는 접두사 검사, (4) `send_http` 술어에서 URL을 "사내 API 독자"로 매핑하는 접두사 검사, 네 조각의 코드다. 결과는 같지만 정책이 코드 속에 흩어지고, 툴이 늘 때마다 (3)(4)가 늘어난다.
+
+**단, 구현의 함정도 같은 자리에 있다 (V9)**
+
+- 와일드카드 없는 호스트는 **완전 일치**만 된다. README 예제의 `send_http("api.example.com")`은 `https://api.example.com/v1`을 차단한다. 실전에서는 `host/*`로 써야 한다. 포트가 붙은 `host:443/`도 차단된다.
+- `execute`의 범위는 **명령 문자열 전체**에 대한 접두사다. `execute(/workspace/*)`는 "`/workspace/`로 시작하는 명령"이지 "워크스페이스 안에서 실행"이 아니다. 그래서 라이브 정책은 결국 `execute(*)`를 주고, 그 안에서 `curl -d @.env`가 통과한다(§5.1).
+- `Exec(t)`의 범위는 좁혀도 엔진이 강제하지 않는다(§5 대조표 보충). 계층이 실제로 작동하는 곳은 `Init(o)`와 `Pass(t)`뿐이다.
 
 #### 7.3.3 논문의 표현력·성능 주장은 이 범위에서 어떻게 되나
 
@@ -419,6 +482,8 @@ V11 무결성 없음     공개 페이지 lineage로 send_http(attacker)/execute
 V12 Init으로 무결성 흉내  Init(web)={display} → 이후 exec/http/write 전부 BLOCKED (P-T와 동일);
                     그러나 .env→사내메일 정상 작업도 BLOCKED, 웹 문서 파일 저장도 BLOCKED
 V13 섞인 민감도     메일 5통 중 1통 기밀: 노드 하나면 예산에 따라 미탐/오탐, 노드를 나눠도 B_ctx로 BLOCKED
+V14 스코프 계층     예산 3줄 {display, write_file(/workspace/*), send_http(internal.corp.com/*)}로 9개 호출 판정:
+                    /workspace 하위·사내 URL 허용, 경로 순회·호스트 위장·외부·메일·셸 차단
 동형성             FIDES 독자 격자 join == ChainCaps meet (64쌍), P-F 판단 == 싱크 검사 판단
 ```
 

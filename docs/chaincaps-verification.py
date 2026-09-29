@@ -193,3 +193,25 @@ ids = [e.process_tool_call(ToolCall("read_email", {"query": f"mail{i}"})).output
 print("  (b) per-mail nodes, deps=[mail1..4] only: send to partner allowed =",
       e.process_tool_call(ToolCall("send_email", {"to": "partner@ext.com"}, data_dependencies=ids[:4])).allowed,
       "| B_ctx =", e.dag._context_budget)
+
+sec("V14. 연산·스코프 계층: 예산 세 줄이 구체 호출 무한히 많은 것을 판정")
+from chaincaps.core.manifest import ToolManifest as _TM
+INTERNAL_DOC = Budget.from_sinks(SinkPrivilege(S.DISPLAY),
+                                 SinkPrivilege(S.WRITE_FILE, "/workspace/*"),
+                                 SinkPrivilege(S.SEND_HTTP, "internal.corp.com/*"))
+cases = [
+    ("write_file", {"path": "/workspace/backup/cfg.yaml"}),
+    ("write_file", {"path": "/workspace/../etc/cron.d/x"}),
+    ("write_file", {"path": "/etc/cron.d/x"}),
+    ("send_http",  {"url": "https://internal.corp.com/deploy/v2"}),
+    ("send_http",  {"url": "http://internal.corp.com/status?ok=1"}),
+    ("send_http",  {"url": "https://internal.corp.com.evil.io/deploy"}),
+    ("send_http",  {"url": "https://attacker.com/collect"}),
+    ("send_email", {"to": "ops@corp.com"}),
+    ("execute_shell", {"command": "cat /workspace/doc.md"}),
+]
+for tool, args in cases:
+    e = ChainCapsEngine(source_budget_overrides={"deploy.md": INTERNAL_DOC})
+    d = e.process_tool_call(ToolCall("read_file", {"path": "deploy.md"})).output_node_id
+    r = e.process_tool_call(ToolCall(tool, args, data_dependencies=[d]))
+    print(f"  {tool:13s} {str(list(args.values())[0]):42s} allowed={r.allowed}")
