@@ -40,6 +40,14 @@ TPOT \approx \frac{\text{weights bytes} + \text{KV cache bytes}}{\text{HBM bandw
 
 캐시 히트가 나면 점선 경로로 prefill을 건너뛰어 TTFT가 줄지만, decode 루프는 그대로이므로 TPOT는 컨텍스트 길이에 따라 결정된다.
 
+### 한 층 안에서 prefill이 하는 연산
+
+KV cache를 채운다는 것은 층마다 아래 연산을 한 번씩 돌리면서 K와 V만 따로 남긴다는 뜻이다. 숫자는 Llama 2 7B 기준으로, 층 32개, 모델 차원 4096, head 32개, head 차원 128이다.
+
+![한 층 안의 prefill 연산 · Q, K, V 투영, head별 attention, 출력 투영, 캐시 쓰기](images/prefill-layer-computation.png)
+
+입력 행렬 X에 세 가중치를 곱해 Q, K, V를 만들고 128차원씩 32개 head로 나눈 뒤, head마다 Query와 Key의 내적으로 N × N 점수를 만들고 미래 칸을 가린 softmax로 Value를 가중합한다. head 출력을 이어 붙여 W_O를 곱하고 FFN을 거친 결과가 다음 층의 입력이 되며, 이 과정에서 K와 V만 캐시에 쓰고 Q, 점수 행렬, head 출력은 쓰고 버린다.
+
 ## 입력 측 요소: 컨텍스트 길이와 캐시 히트
 
 TTFT를 가장 크게 움직이는 것은 이번 요청에서 새로 prefill 해야 하는 토큰 수다. 보낸 컨텍스트 전체가 아니라, 그중 캐시에 없는 부분이 기준이다.
